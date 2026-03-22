@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Marketing Team</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f8f9fa;
+      color: #1a1a2e;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #1a1a2e;
+      color: white;
+      padding: 2rem;
+      text-align: center;
+    }
+    header h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.5px; }
+    header p { color: #94a3b8; margin-top: 0.4rem; font-size: 1rem; }
+
+    .controls {
+      max-width: 1200px;
+      margin: 1.5rem auto 0;
+      padding: 0 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .search-wrap { flex: 1; min-width: 200px; position: relative; }
+    .search-wrap input {
+      width: 100%;
+      padding: 0.65rem 1rem 0.65rem 2.6rem;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      background: white;
+      transition: border-color 0.15s;
+    }
+    .search-wrap input:focus { outline: none; border-color: #6366f1; }
+    .search-wrap::before {
+      content: 'ð';
+      position: absolute;
+      left: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.85rem;
+    }
+
+    .filter-bar { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .filter-btn {
+      padding: 0.5rem 1rem;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 20px;
+      background: white;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      color: #64748b;
+    }
+    .filter-btn:hover { border-color: #6366f1; color: #6366f1; }
+    .filter-btn.active { background: #1a1a2e; border-color: #1a1a2e; color: white; }
+
+    .grid {
+      max-width: 1200px;
+      margin: 1.5rem auto 3rem;
+      padding: 0 1.5rem;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+    }
+    @media (max-width: 1023px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 639px) { .grid { grid-template-columns: 1fr; } }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      transition: transform 0.15s, box-shadow 0.15s;
+      display: flex;
+      flex-direction: column;
+    }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+    .card.hidden { display: none; }
+
+    .card-header {
+      padding: 1.25rem 1.25rem 1rem;
+      border-top: 4px solid var(--color);
+    }
+    .card-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+    .card-name { font-size: 1.05rem; font-weight: 700; color: #1a1a2e; line-height: 1.3; }
+    .card-role { font-size: 0.8rem; color: #64748b; margin-top: 0.2rem; }
+
+    .status-badge {
+      flex-shrink: 0;
+      padding: 0.25rem 0.65rem;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: opacity 0.15s;
+      white-space: nowrap;
+    }
+    .status-badge:hover { opacity: 0.8; }
+    .status-active { background: #dcfce7; color: #166534; }
+    .status-busy { background: #fef9c3; color: #854d0e; }
+    .status-offline { background: #f1f5f9; color: #64748b; }
+
+    .last-used {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      margin-top: 0.5rem;
+    }
+
+    .skills {
+      padding: 0 1.25rem 1rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      flex: 1;
+    }
+    .skill-tag {
+      padding: 0.2rem 0.55rem;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      font-weight: 500;
+      background: var(--color-light);
+      color: var(--color);
+    }
+
+    .card-actions {
+      padding: 1rem 1.25rem;
+      border-top: 1px solid #f1f5f9;
+      display: flex;
+      gap: 0.75rem;
+    }
+    .btn {
+      flex: 1;
+      padding: 0.55rem 0.75rem;
+      border-radius: 7px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: center;
+      border: none;
+    }
+    .btn-copy {
+      background: #f1f5f9;
+      color: #475569;
+    }
+    .btn-copy:hover { background: #e2e8f0; }
+    .btn-copy.copied { background: #dcfce7; color: #166534; }
+    .btn-chat {
+      background: var(--color);
+      color: white;
+    }
+    .btn-chat:hover { opacity: 0.88; }
+
+    .empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 3rem;
+      color: #94a3b8;
+      font-size: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Marketing Team</h1>
+  <p>Your 7 AI marketing specialists</p>
+</header>
+
+<div class="controls">
+  <div class="search-wrap">
+    <input type="text" id="search" placeholder="Search agents or skills..." autocomplete="off">
+  </div>
+  <div class="filter-bar">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="active">ð¢ Active</button>
+    <button class="filter-btn" data-filter="busy">ð¡ Busy</button>
+    <button class="filter-btn" data-filter="offline">âª Offline</button>
+  </div>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<script>
+const agents = [
+  {
+    id: 'seo-content-agent',
+    name: 'SEO & Content',
+    role: 'SEO & Content Specialist',
+    command: '/marketing:seo',
+    color: '#2d6a4f',
+    colorLight: '#d1fae5',
+    skills: ['seo-audit','ai-seo','site-architecture','programmatic-seo','schema-markup','content-strategy'],
+    intro: 'You are the SEO & Content Specialist, an expert in search engine optimization, AI search visibility, and content strategy. Your skills: seo-audit, ai-seo, site-architecture, programmatic-seo, schema-markup, content-strategy. What SEO or content task can I help you with today?'
+  },
+  {
+    id: 'cro-agent',
+    name: 'CRO',
+    role: 'Conversion Rate Optimization Specialist',
+    command: '/marketing:cro',
+    color: '#c1121f',
+    colorLight: '#fee2e2',
+    skills: ['page-cro','signup-flow-cro','onboarding-cro','form-cro','popup-cro','paywall-upgrade-cro'],
+    intro: 'You are the CRO Specialist, an expert in conversion rate optimization across pages, flows, and in-app experiences. Your skills: page-cro, signup-flow-cro, onboarding-cro, form-cro, popup-cro, paywall-upgrade-cro. What conversion problem can I help you fix today?'
+  },
+  {
+    id: 'content-copy-agent',
+    name: 'Content & Copy',
+    role: 'Content & Copy Specialist',
+    command: '/marketing:content',
+    color: '#e07b39',
+    colorLight: '#ffedd5',
+    skills: ['copywriting','copy-editing','cold-email','email-sequence','social-content'],
+    intro: 'You are the Content & Copy Specialist, an expert in marketing copywriting, cold email, email sequences, and social content. Your skills: copywriting, copy-editing, cold-email, email-sequence, social-content. What copy or content task can I help you with today?'
+  },
+  {
+    id: 'paid-measurement-agent',
+    name: 'Paid & Measurement',
+    role: 'Paid & Measurement Specialist',
+    command: '/marketing:paid',
+    color: '#1b7a6e',
+    colorLight: '#ccfbf1',
+    skills: ['paid-ads','ad-creative','ab-test-setup','analytics-tracking'],
+    intro: 'You are the Paid & Measurement Specialist, an expert in paid advertising, ad creative, A/B testing, and analytics tracking. Your skills: paid-ads, ad-creative, ab-test-setup, analytics-tracking. What paid media or measurement task can I help you with today?'
+  },
+  {
+    id: 'growth-retention-agent',
+    name: 'Growth & Retention',
+    role: 'Growth & Retention Specialist',
+    command: '/marketing:growth',
+    color: '#5a189a',
+    colorLight: '#ede9fe',
+    skills: ['referral-program','free-tool-strategy','churn-prevention','lead-magnets'],
+    intro: 'You are the Growth & Retention Specialist, an expert in referral programs, free tool strategy, churn prevention, and lead magnets. Your skills: referral-program, free-tool-strategy, churn-prevention, lead-magnets. What growth or retention challenge can I help you tackle today?'
+  },
+  {
+    id: 'sales-gtm-agent',
+    name: 'Sales & GTM',
+    role: 'Sales & Go-To-Market Specialist',
+    command: '/marketing:sales',
+    color: '#bc4b28',
+    colorLight: '#fee2d5',
+    skills: ['revops','sales-enablement','launch-strategy',pricing-strategy','competitor-alternatives'],
+    intro: 'You are the Sales & GTM Specialist, an expert in revenue operations, sales enablement, product launches, pricing strategy, and competitor positioning. Your skills: revops, sales-enablement, launch-strategy, pricing-strategy, competitor-alternatives. What sales or GTM task can I help you with today?'
+  },
+  {
+    id: 'strategy-agent',
+    name: 'Strategy',
+    role: 'Marketing Strategy Specialist',
+    command: '/marketing:strategy',
+    color: '#1d3461',
+    colorLight: '#dbeafe',
+    skills: ['marketing-ideas','marketing-psychology','product-marketing-context'],
+    intro: 'You are the Marketing Strategy Specialist, an expert in marketing ideas, psychological frameworks, and product positioning. Your skills: marketing-ideas, marketing-psychology, product-marketing-context. What strategy question can I help you think through today?'
+  }
+];
+
+// State helpers
+function getStatus(id) {
+  return localStorage.getItem(`status_${id}`) || 'active';
+}
+function setStatus(id, status) {
+  localStorage.setItem(`status_${id}`, status);
+}
+function getLastUsed(id) {
+  return localStorage.getItem(`lastUsed_${id}`) || null;
+}
+function setLastUsed(id) {
+  localStorage.setItem(`lastUsed_${id}`, Date.now().toString());
+}
+function formatLastUsed(ts) {
+  if (!ts) return 'Never used';
+  const diff = Date.now() - parseInt(ts);
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'Just now';
+  if (mins < 60) return `Last used ${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `Last used ${hrs}h ago`;
+  return `Last used ${Math.floor(hrs / 24)}d ago`;
+}
+
+const statusCycle = { active: 'busy', busy: 'offline', offline: 'active' };
+const statusLabel = { active: 'ð¢ Active', busy: 'ð¡ Busy', offline: 'âª Offline' };
+const statusClass = { active: 'status-active', busy: 'status-busy', offline: 'status-offline' };
+
+function renderCards(filtered) {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+
+  if (filtered.length === 0) {
+    grid.innerHTML = '<div class="empty-state">No agents match your search.</div>';
+    return;
+  }
+
+  filtered.forEach(agent => {
+    const status = getStatus(agent.id);
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.agentId = agent.id;
+    card.style.setProperty('--color', agent.color);
+    card.style.setProperty('--color-light', agent.colorLight);
+
+    card.innerHTML = `
+      <div class="card-header">
+        <div class="card-title-row">
+          <div>
+            <div class="card-name">${agent.name}</div>
+            <div class="card-role">${agent.role}</div>
+          </div>
+          <span class="status-badge ${statusClass[status]}" data-id="${agent.id}">${statusLabel[status]}</span>
+        </div>
+        <div class="last-used" data-id="${agent.id}">${formatLastUsed(getLastUsed(agent.id))}</div>
+      </div>
+      <div class="skills">
+        ${agent.skills.map(s => `<span class="skill-tag">${s}</span>`).join('')}
+      </div>
+      <div class="card-actions">
+        <button class="btn btn-copy" data-command="${agent.command}">Copy ${agent.command}</button>
+        <button class="btn btn-chat" data-id="${agent.id}" data-intro="${encodeURIComponent(agent.intro)}">Chat â</button>
+      </div>
+    `;
+
+    grid.appendChild(card);
+  });
+
+  // Status badge click
+  grid.querySelectorAll('.status-badge').forEach(badge => {
+    badge.addEventListener('click', () => {
+      const id = badge.dataset.id;
+      const current = getStatus(id);
+      const next = statusCycle[current];
+      setStatus(id, next);
+      badge.className = `status-badge ${statusClass[next]}`;
+      badge.textContent = statusLabel[next];
+      applyFilters();
+    });
+  });
+
+  // Copy command
+  grid.querySelectorAll('.btn-copy').forEach(btn => {
+    btn.addEventListener('click', () => {
+      navigator.clipboard.writeText(btn.dataset.command).catch(() => {});
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = `Copy ${btn.dataset.command}`;
+        btn.classList.remove('copied');
+      }, 2000);
+    });
+  });
+
+  // Chat button
+  grid.querySelectorAll('.btn-chat').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      setLastUsed(id);
+      // Update last-used display
+      const lastUsedEl = grid.querySelector(`.last-used[data-id="${id}"]`);
+      if (lastUsedEl) lastUsedEl.textContent = formatLastUsed(getLastUsed(id));
+      const url = `https://claude.ai/new?q=${btn.dataset.intro}`;
+      window.open(url, '_blank', 'noopener');
+    });
+  });
+}
+
+let currentFilter = 'all';
+let currentSearch = '';
+
+function applyFilters() {
+  let filtered = agents.filter(agent => {
+    const status = getStatus(agent.id);
+    const matchesFilter = currentFilter === 'all' || status === currentFilter;
+    const q = currentSearch.toLowerCase();
+    const matchesSearch = !q ||
+      agent.name.toLowerCase().includes(q) ||
+      agent.role.toLowerCase().includes(q) ||
+      agent.skills.some(s => s.includes(q));
+    return matchesFilter && matchesSearch;
+  });
+  renderCards(filtered);
+}
+
+// Search
+document.getElementById('search').addEventListener('input', e => {
+  currentSearch = e.target.value;
+  applyFilters();
+});
+
+// Filter buttons
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.filter;
+    applyFilters();
+  });
+});
+
+// Initial render
+applyFilters();
+</script>
+</body>
+</html>
