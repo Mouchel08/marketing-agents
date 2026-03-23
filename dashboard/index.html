@@ -36,7 +36,7 @@
     .search-wrap { flex: 1; min-width: 200px; position: relative; }
     .search-wrap input {
       width: 100%;
-      padding: 0.65rem 1rem 0.65rem 2.6rem;
+      padding: 0.65rem 1rem 0.65rem 2.4rem;
       border: 1.5px solid #e2e8f0;
       border-radius: 8px;
       font-size: 0.95rem;
@@ -45,12 +45,13 @@
     }
     .search-wrap input:focus { outline: none; border-color: #6366f1; }
     .search-wrap::before {
-      content: 'ð';
+      content: '\2315';
       position: absolute;
       left: 0.75rem;
       top: 50%;
       transform: translateY(-50%);
-      font-size: 0.85rem;
+      font-size: 0.9rem;
+      color: #94a3b8;
     }
 
     .filter-bar { display: flex; gap: 0.5rem; flex-wrap: wrap; }
@@ -64,9 +65,18 @@
       cursor: pointer;
       transition: all 0.15s;
       color: #64748b;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
     }
     .filter-btn:hover { border-color: #6366f1; color: #6366f1; }
     .filter-btn.active { background: #1a1a2e; border-color: #1a1a2e; color: white; }
+    .filter-btn .dot {
+      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    }
+    .dot-active { background: #16a34a; }
+    .dot-busy { background: #ca8a04; }
+    .dot-offline { background: #94a3b8; }
 
     .grid {
       max-width: 1200px;
@@ -114,8 +124,12 @@
       user-select: none;
       transition: opacity 0.15s;
       white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
     }
     .status-badge:hover { opacity: 0.8; }
+    .status-badge .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
     .status-active { background: #dcfce7; color: #166534; }
     .status-busy { background: #fef9c3; color: #854d0e; }
     .status-offline { background: #f1f5f9; color: #64748b; }
@@ -159,16 +173,10 @@
       text-align: center;
       border: none;
     }
-    .btn-copy {
-      background: #f1f5f9;
-      color: #475569;
-    }
+    .btn-copy { background: #f1f5f9; color: #475569; }
     .btn-copy:hover { background: #e2e8f0; }
     .btn-copy.copied { background: #dcfce7; color: #166534; }
-    .btn-chat {
-      background: var(--color);
-      color: white;
-    }
+    .btn-chat { background: var(--color); color: white; }
     .btn-chat:hover { opacity: 0.88; }
 
     .empty-state {
@@ -193,9 +201,9 @@
   </div>
   <div class="filter-bar">
     <button class="filter-btn active" data-filter="all">All</button>
-    <button class="filter-btn" data-filter="active">ð¢ Active</button>
-    <button class="filter-btn" data-filter="busy">ð¡ Busy</button>
-    <button class="filter-btn" data-filter="offline">âª Offline</button>
+    <button class="filter-btn" data-filter="active"><span class="dot dot-active"></span>Active</button>
+    <button class="filter-btn" data-filter="busy"><span class="dot dot-busy"></span>Busy</button>
+    <button class="filter-btn" data-filter="offline"><span class="dot dot-offline"></span>Offline</button>
   </div>
 </div>
 
@@ -205,8 +213,8 @@
 const agents = [
   {
     id: 'seo-content-agent',
-    name: 'SEO & Content',
-    role: 'SEO & Content Specialist',
+    name: 'SEO &amp; Content',
+    role: 'SEO &amp; Content Specialist',
     command: '/marketing:seo',
     color: '#2d6a4f',
     colorLight: '#d1fae5',
@@ -225,8 +233,8 @@ const agents = [
   },
   {
     id: 'content-copy-agent',
-    name: 'Content & Copy',
-    role: 'Content & Copy Specialist',
+    name: 'Content &amp; Copy',
+    role: 'Content &amp; Copy Specialist',
     command: '/marketing:content',
     color: '#e07b39',
     colorLight: '#ffedd5',
@@ -235,8 +243,8 @@ const agents = [
   },
   {
     id: 'paid-measurement-agent',
-    name: 'Paid & Measurement',
-    role: 'Paid & Measurement Specialist',
+    name: 'Paid &amp; Measurement',
+    role: 'Paid &amp; Measurement Specialist',
     command: '/marketing:paid',
     color: '#1b7a6e',
     colorLight: '#ccfbf1',
@@ -245,8 +253,8 @@ const agents = [
   },
   {
     id: 'growth-retention-agent',
-    name: 'Growth & Retention',
-    role: 'Growth & Retention Specialist',
+    name: 'Growth &amp; Retention',
+    role: 'Growth &amp; Retention Specialist',
     command: '/marketing:growth',
     color: '#5a189a',
     colorLight: '#ede9fe',
@@ -255,8 +263,8 @@ const agents = [
   },
   {
     id: 'sales-gtm-agent',
-    name: 'Sales & GTM',
-    role: 'Sales & Go-To-Market Specialist',
+    name: 'Sales &amp; GTM',
+    role: 'Sales &amp; Go-To-Market Specialist',
     command: '/marketing:sales',
     color: '#bc4b28',
     colorLight: '#fee2d5',
@@ -275,43 +283,33 @@ const agents = [
   }
 ];
 
-// State helpers
-function getStatus(id) {
-  return localStorage.getItem(`status_${id}`) || 'active';
-}
-function setStatus(id, status) {
-  localStorage.setItem(`status_${id}`, status);
-}
-function getLastUsed(id) {
-  return localStorage.getItem(`lastUsed_${id}`) || null;
-}
-function setLastUsed(id) {
-  localStorage.setItem(`lastUsed_${id}`, Date.now().toString());
-}
+function getStatus(id) { return localStorage.getItem('status_'+id) || 'active'; }
+function setStatus(id, s) { localStorage.setItem('status_'+id, s); }
+function getLastUsed(id) { return localStorage.getItem('lastUsed_'+id) || null; }
+function setLastUsed(id) { localStorage.setItem('lastUsed_'+id, Date.now().toString()); }
 function formatLastUsed(ts) {
   if (!ts) return 'Never used';
   const diff = Date.now() - parseInt(ts);
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return 'Just now';
-  if (mins < 60) return `Last used ${mins}m ago`;
+  if (mins < 60) return 'Last used ' + mins + 'm ago';
   const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `Last used ${hrs}h ago`;
-  return `Last used ${Math.floor(hrs / 24)}d ago`;
+  if (hrs < 24) return 'Last used ' + hrs + 'h ago';
+  return 'Last used ' + Math.floor(hrs / 24) + 'd ago';
 }
 
 const statusCycle = { active: 'busy', busy: 'offline', offline: 'active' };
-const statusLabel = { active: 'ð¢ Active', busy: 'ð¡ Busy', offline: 'âª Offline' };
+const statusLabel = { active: 'Active', busy: 'Busy', offline: 'Offline' };
 const statusClass = { active: 'status-active', busy: 'status-busy', offline: 'status-offline' };
+const dotClass = { active: 'dot-active', busy: 'dot-busy', offline: 'dot-offline' };
 
 function renderCards(filtered) {
   const grid = document.getElementById('grid');
   grid.innerHTML = '';
-
   if (filtered.length === 0) {
     grid.innerHTML = '<div class="empty-state">No agents match your search.</div>';
     return;
   }
-
   filtered.forEach(agent => {
     const status = getStatus(agent.id);
     const card = document.createElement('div');
@@ -319,7 +317,6 @@ function renderCards(filtered) {
     card.dataset.agentId = agent.id;
     card.style.setProperty('--color', agent.color);
     card.style.setProperty('--color-light', agent.colorLight);
-
     card.innerHTML = `
       <div class="card-header">
         <div class="card-title-row">
@@ -327,57 +324,53 @@ function renderCards(filtered) {
             <div class="card-name">${agent.name}</div>
             <div class="card-role">${agent.role}</div>
           </div>
-          <span class="status-badge ${statusClass[status]}" data-id="${agent.id}">${statusLabel[status]}</span>
+          <span class="status-badge ${statusClass[status]}" data-id="${agent.id}">
+            <span class="dot ${dotClass[status]}"></span>${statusLabel[status]}
+          </span>
         </div>
         <div class="last-used" data-id="${agent.id}">${formatLastUsed(getLastUsed(agent.id))}</div>
       </div>
       <div class="skills">
-        ${agent.skills.map(s => `<span class="skill-tag">${s}</span>`).join('')}
+        ${agent.skills.map(s => '<span class="skill-tag">'+s+'</span>').join('')}
       </div>
       <div class="card-actions">
         <button class="btn btn-copy" data-command="${agent.command}">Copy ${agent.command}</button>
-        <button class="btn btn-chat" data-id="${agent.id}" data-intro="${encodeURIComponent(agent.intro)}">Chat â</button>
+        <button class="btn btn-chat" data-id="${agent.id}" data-intro="${encodeURIComponent(agent.intro)}">Chat &#8594;</button>
       </div>
     `;
-
     grid.appendChild(card);
   });
 
-  // Status badge click
   grid.querySelectorAll('.status-badge').forEach(badge => {
     badge.addEventListener('click', () => {
       const id = badge.dataset.id;
-      const current = getStatus(id);
-      const next = statusCycle[current];
+      const next = statusCycle[getStatus(id)];
       setStatus(id, next);
-      badge.className = `status-badge ${statusClass[next]}`;
-      badge.textContent = statusLabel[next];
+      badge.className = 'status-badge ' + statusClass[next];
+      badge.innerHTML = '<span class="dot ' + dotClass[next] + '"></span>' + statusLabel[next];
       applyFilters();
     });
   });
 
-  // Copy command
   grid.querySelectorAll('.btn-copy').forEach(btn => {
     btn.addEventListener('click', () => {
       navigator.clipboard.writeText(btn.dataset.command).catch(() => {});
       btn.textContent = 'Copied!';
       btn.classList.add('copied');
       setTimeout(() => {
-        btn.textContent = `Copy ${btn.dataset.command}`;
+        btn.textContent = 'Copy ' + btn.dataset.command;
         btn.classList.remove('copied');
       }, 2000);
     });
   });
 
-  // Chat button
   grid.querySelectorAll('.btn-chat').forEach(btn => {
     btn.addEventListener('click', () => {
       const id = btn.dataset.id;
       setLastUsed(id);
-      // Update last-used display
-      const lastUsedEl = grid.querySelector(`.last-used[data-id="${id}"]`);
+      const lastUsedEl = grid.querySelector('.last-used[data-id="'+id+'"]');
       if (lastUsedEl) lastUsedEl.textContent = formatLastUsed(getLastUsed(id));
-      const url = `https://claude.ai/new?q=${btn.dataset.intro}`;
+      const url = 'https://claude.ai/new?q=' + btn.dataset.intro;
       window.open(url, '_blank', 'noopener');
     });
   });
@@ -387,7 +380,7 @@ let currentFilter = 'all';
 let currentSearch = '';
 
 function applyFilters() {
-  let filtered = agents.filter(agent => {
+  const filtered = agents.filter(agent => {
     const status = getStatus(agent.id);
     const matchesFilter = currentFilter === 'all' || status === currentFilter;
     const q = currentSearch.toLowerCase();
@@ -400,13 +393,11 @@ function applyFilters() {
   renderCards(filtered);
 }
 
-// Search
 document.getElementById('search').addEventListener('input', e => {
   currentSearch = e.target.value;
   applyFilters();
 });
 
-// Filter buttons
 document.querySelectorAll('.filter-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -416,7 +407,6 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
   });
 });
 
-// Initial render
 applyFilters();
 </script>
 </body>
